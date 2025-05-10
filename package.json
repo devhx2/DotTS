@@ -18,6 +18,7 @@
   "homepage": "https://github.com/devhx2/DotTS#readme",
   "devDependencies": {
     "typescript": "^5.8.3",
+    "vite": "^6.3.5",
     "vitest": "^3.1.3"
   }
 }
