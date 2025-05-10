@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/devhx2/DotTS/issues"
   },
-  "homepage": "https://github.com/devhx2/DotTS#readme"
+  "homepage": "https://github.com/devhx2/DotTS#readme",
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
 }
