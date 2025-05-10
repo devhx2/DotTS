@@ -1,0 +1,227 @@
+import { Config, Sprite } from "./types";
+
+export class DotTS {
+  #sprites: Sprite[] = [];
+  #config: Config;
+  #ctx: WebGLRenderingContext;
+  #uScale!: WebGLUniformLocation;
+  #aPosition!: number;
+  #aTexCoord!: number;
+  #uOffset!: WebGLUniformLocation;
+
+  constructor(config: Config) {
+    this.#config = config;
+
+    const canvas = document.getElementById(
+      config.canvas.id
+    ) as HTMLCanvasElement;
+
+    this.#ctx = canvas.getContext("webgl") as WebGLRenderingContext;
+    if (!this.#ctx) alert("Not Supported WebGL!");
+
+    canvas.width = config.canvas.width;
+    canvas.height = config.canvas.height;
+
+    this.#ctx.viewport(0, 0, canvas.width, canvas.height);
+    this.#ctx.enable(this.#ctx.BLEND);
+    this.#ctx.blendFunc(this.#ctx.SRC_ALPHA, this.#ctx.ONE_MINUS_SRC_ALPHA);
+
+    Promise.all([
+      this.#loadShaderSource("../shader/sprite.vert"),
+      this.#loadShaderSource("../shader/sprite.frag"),
+    ]).then(([vsSource, fsSource]) => {
+      const vertexShader = this.#createShader(
+        this.#ctx,
+        this.#ctx.VERTEX_SHADER,
+        vsSource
+      );
+      const fragmentShader = this.#createShader(
+        this.#ctx,
+        this.#ctx.FRAGMENT_SHADER,
+        fsSource
+      );
+
+      if (!vertexShader || !fragmentShader) {
+        console.error("failed to create shader");
+        return;
+      }
+
+      const program = this.#ctx.createProgram();
+      this.#ctx.attachShader(program, vertexShader);
+      this.#ctx.attachShader(program, fragmentShader);
+      this.#ctx.linkProgram(program);
+      this.#ctx.useProgram(program);
+
+      this.#aPosition = this.#ctx.getAttribLocation(program, "aPosition");
+      this.#aTexCoord = this.#ctx.getAttribLocation(program, "aTexCoord");
+      this.#uScale = this.#ctx.getUniformLocation(program, "uScale")!;
+      this.#uOffset = this.#ctx.getUniformLocation(program, "uOffset")!;
+      const uCanvasSize = this.#ctx.getUniformLocation(program, "uCanvasSize");
+
+      this.#ctx.uniform2f(uCanvasSize, canvas.width, canvas.height);
+
+      const spriteCount = 1;
+
+      for (let i = 0; i < spriteCount; i++) {
+        const w = 16;
+        const h = 16;
+
+        const vertices = new Float32Array([
+          0,
+          0,
+          0,
+          0,
+          w,
+          0,
+          1,
+          0,
+          0,
+          h,
+          0,
+          1,
+          w,
+          h,
+          1,
+          1,
+        ]);
+
+        const buffer = this.#ctx.createBuffer();
+        this.#ctx.bindBuffer(this.#ctx.ARRAY_BUFFER, buffer);
+        this.#ctx.bufferData(
+          this.#ctx.ARRAY_BUFFER,
+          vertices,
+          this.#ctx.STATIC_DRAW
+        );
+
+        const width = canvas.width / config.canvas.scale;
+        const speed = Math.round(width / (config.fps * 8));
+
+        const sprite: Sprite = {
+          x: 0,
+          y: 0,
+          speedX: speed,
+          speedY: speed,
+          texture: this.#loadTexture(this.#ctx, `../texture/sample_16x16.png`)!,
+          buffer: buffer,
+        };
+
+        this.#sprites.push(sprite);
+      }
+    });
+  }
+
+  async #loadShaderSource(url: string): Promise<string> {
+    const res = await fetch(url);
+    return await res.text();
+  }
+
+  #createShader(
+    ctx: WebGLRenderingContext,
+    type: number,
+    source: string
+  ): WebGLShader | null {
+    const shader = ctx.createShader(type);
+    if (!shader) {
+      console.error("failed to crete shader");
+      return null;
+    }
+    ctx.shaderSource(shader, source);
+    ctx.compileShader(shader);
+    if (!ctx.getShaderParameter(shader, ctx.COMPILE_STATUS)) {
+      console.error(ctx.getShaderInfoLog(shader));
+      ctx.deleteShader(shader);
+      return null;
+    }
+    return shader;
+  }
+
+  #loadTexture(ctx: WebGLRenderingContext, src: string): WebGLTexture | null {
+    const texture = ctx.createTexture();
+    const image = new Image();
+    image.src = src;
+    image.onload = () => {
+      ctx.bindTexture(ctx.TEXTURE_2D, texture);
+      ctx.texImage2D(
+        ctx.TEXTURE_2D,
+        0,
+        ctx.RGBA,
+        ctx.RGBA,
+        ctx.UNSIGNED_BYTE,
+        image
+      );
+      ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_WRAP_S, ctx.CLAMP_TO_EDGE);
+      ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_WRAP_T, ctx.CLAMP_TO_EDGE);
+      ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MIN_FILTER, ctx.NEAREST);
+      ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MAG_FILTER, ctx.NEAREST);
+    };
+    return texture;
+  }
+
+  #update() {
+    for (const sprite of this.#sprites) {
+      sprite.x += sprite.speedX;
+      sprite.y += sprite.speedY;
+
+      sprite.x = Math.round(sprite.x);
+      sprite.y = Math.round(sprite.y);
+
+      if (sprite.x < 0 || sprite.x > this.#config.canvas.width / 4 - 16)
+        sprite.speedX *= -1;
+      if (sprite.y < 0 || sprite.y > this.#config.canvas.height / 4 - 16)
+        sprite.speedY *= -1;
+    }
+  }
+
+  #render() {
+    this.#ctx.clearColor(51 / 255, 187 / 255, 51 / 255, 1.0);
+    this.#ctx.clear(this.#ctx.COLOR_BUFFER_BIT);
+
+    for (const sprite of this.#sprites) {
+      this.#ctx.bindTexture(this.#ctx.TEXTURE_2D, sprite.texture);
+      this.#ctx.bindBuffer(this.#ctx.ARRAY_BUFFER, sprite.buffer);
+
+      this.#ctx.enableVertexAttribArray(this.#aPosition);
+      this.#ctx.vertexAttribPointer(
+        this.#aPosition,
+        2,
+        this.#ctx.FLOAT,
+        false,
+        16,
+        0
+      );
+
+      this.#ctx.enableVertexAttribArray(this.#aTexCoord);
+      this.#ctx.vertexAttribPointer(
+        this.#aTexCoord,
+        2,
+        this.#ctx.FLOAT,
+        false,
+        16,
+        8
+      );
+
+      const x = Math.round(sprite.x);
+      const y = Math.round(sprite.y);
+
+      this.#ctx.uniform2f(this.#uOffset, x, y);
+      this.#ctx.uniform1f(this.#uScale, this.#config.canvas.scale);
+      this.#ctx.drawArrays(this.#ctx.TRIANGLE_STRIP, 0, 4);
+    }
+  }
+
+  run(): void {
+    const interval = 1000 / this.#config.fps;
+    let lastTime = 0;
+
+    const loop = (currentTime: number) => {
+      if (currentTime - lastTime >= interval) {
+        this.#update();
+        this.#render();
+        lastTime = currentTime;
+      }
+      requestAnimationFrame(loop);
+    };
+
+    requestAnimationFrame(loop);
+  }
+}
