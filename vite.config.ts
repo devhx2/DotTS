@@ -1,3 +1,4 @@
+import path from "path";
 import { defineConfig } from "vite";
 
 export default defineConfig({
@@ -6,6 +7,11 @@ export default defineConfig({
   build: {
     rollupOptions: {},
     outDir: "dist",
+  },
+  resolve: {
+    alias: {
+      "@dotts": path.resolve(__dirname, "/src/index.ts"),
+    },
   },
   server: {
     open: "/test/run/base/index.html",
