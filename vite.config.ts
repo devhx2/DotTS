@@ -2,16 +2,12 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   root: ".",
-  publicDir: false,
+  publicDir: "/test/run/texture/",
   build: {
-    rollupOptions: {
-      input: {
-        add: "test/run/add.html",
-      },
-    },
+    rollupOptions: {},
     outDir: "dist",
   },
   server: {
-    open: "/test/run/add.html",
+    open: "/test/run/base/index.html",
   },
 });
