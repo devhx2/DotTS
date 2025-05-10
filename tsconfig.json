@@ -5,7 +5,11 @@
     "moduleResolution": "Node",
     "strict": true,
     "outDir": "dist",
-    "types": ["vitest", "node"]
+    "types": ["vitest", "node"],
+    "baseUrl": ".",
+    "paths": {
+      "@dotts": ["src/index.ts"]
+    }
   },
   "include": ["src"],
   "exclude": ["node_modules"]

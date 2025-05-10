@@ -10,7 +10,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@dotts": path.resolve(__dirname, "/src/index.ts"),
+      "@dotts": path.resolve(__dirname, "src/index.ts"),
     },
   },
   server: {
