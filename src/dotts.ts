@@ -1,5 +1,5 @@
 import { TexturePool } from "./resources/texture";
-import { Config, Sprite } from "./types";
+import { Config, Sprite, VectorUtil } from "./types";
 
 export class DotTS {
   #sprites: Sprite[] = [];
@@ -102,10 +102,8 @@ export class DotTS {
         const speed = Math.round(width / (config.fps * 8));
 
         const sprite: Sprite = {
-          x: 0,
-          y: 0,
-          speedX: speed,
-          speedY: speed,
+          position: { x: 0, y: 0 },
+          speed: { x: speed, y: speed },
           textureID: "../texture/sample_16x16.png",
           buffer: buffer,
         };
@@ -142,16 +140,18 @@ export class DotTS {
 
   #update() {
     for (const sprite of this.#sprites) {
-      sprite.x += sprite.speedX;
-      sprite.y += sprite.speedY;
+      sprite.position = VectorUtil.add(sprite.position, sprite.speed);
 
-      sprite.x = Math.round(sprite.x);
-      sprite.y = Math.round(sprite.y);
-
-      if (sprite.x < 0 || sprite.x > this.#config.canvas.width / 4 - 16)
-        sprite.speedX *= -1;
-      if (sprite.y < 0 || sprite.y > this.#config.canvas.height / 4 - 16)
-        sprite.speedY *= -1;
+      if (
+        sprite.position.x < 0 ||
+        sprite.position.x > this.#config.canvas.width / 4 - 16
+      )
+        sprite.speed.x *= -1;
+      if (
+        sprite.position.y < 0 ||
+        sprite.position.y > this.#config.canvas.height / 4 - 16
+      )
+        sprite.speed.y *= -1;
     }
   }
 
@@ -186,10 +186,9 @@ export class DotTS {
         8
       );
 
-      const x = Math.round(sprite.x);
-      const y = Math.round(sprite.y);
+      sprite.position = VectorUtil.round(sprite.position);
 
-      this.#ctx.uniform2f(this.#uOffset, x, y);
+      this.#ctx.uniform2f(this.#uOffset, sprite.position.x, sprite.position.y);
       this.#ctx.uniform1f(this.#uScale, this.#config.canvas.scale);
       this.#ctx.drawArrays(this.#ctx.TRIANGLE_STRIP, 0, 4);
     }
