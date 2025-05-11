@@ -96,7 +96,7 @@ export class DotTS {
         );
 
         const width = canvas.width / config.canvas.scale;
-        const speed = Math.round(width / (config.fps * 8));
+        const speed = Math.round(width / (config.fps * 10));
 
         const sprite: Sprite = {
           position: { x: 0, y: 0 },
@@ -117,12 +117,14 @@ export class DotTS {
 
       if (
         sprite.position.x < 0 ||
-        sprite.position.x > this.#config.canvas.width / 4 - 16
+        sprite.position.x >
+          this.#config.canvas.width / this.#config.canvas.scale - 16
       )
         sprite.speed.x *= -1;
       if (
         sprite.position.y < 0 ||
-        sprite.position.y > this.#config.canvas.height / 4 - 16
+        sprite.position.y >
+          this.#config.canvas.height / this.#config.canvas.scale - 16
       )
         sprite.speed.y *= -1;
     }

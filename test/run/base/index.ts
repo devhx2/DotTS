@@ -3,9 +3,9 @@ import { Config, DotTS } from "@dotts";
 const config: Config = {
   canvas: {
     id: "game-screen",
-    width: 640,
-    height: 480,
-    scale: 4,
+    width: 16 * 80,
+    height: 9 * 80,
+    scale: 8,
   },
   fps: 30,
 };
