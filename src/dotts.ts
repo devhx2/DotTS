@@ -1,14 +1,15 @@
 import { TexturePool } from "./resources/texture";
-import { Config, Sprite, VectorUtil } from "./types";
+import { ColorUtil, Config, Sprite, VectorUtil } from "./types";
 
 export class DotTS {
   #sprites: Sprite[] = [];
   #config: Config;
   #ctx: WebGLRenderingContext;
   #textures: TexturePool;
-  #uScale!: WebGLUniformLocation;
   #aPosition!: number;
   #aTexCoord!: number;
+  #uScale!: WebGLUniformLocation;
+  #uColor!: WebGLUniformLocation;
   #uOffset!: WebGLUniformLocation;
 
   constructor(config: Config) {
@@ -60,6 +61,7 @@ export class DotTS {
       this.#aPosition = this.#ctx.getAttribLocation(program, "aPosition");
       this.#aTexCoord = this.#ctx.getAttribLocation(program, "aTexCoord");
       this.#uScale = this.#ctx.getUniformLocation(program, "uScale")!;
+      this.#uColor = this.#ctx.getUniformLocation(program, "uColor")!;
       this.#uOffset = this.#ctx.getUniformLocation(program, "uOffset")!;
       const uCanvasSize = this.#ctx.getUniformLocation(program, "uCanvasSize");
 
@@ -103,6 +105,7 @@ export class DotTS {
 
         const sprite: Sprite = {
           position: { x: 0, y: 0 },
+          color: { r: 255, g: 255, b: 255, a: 200 },
           speed: { x: speed, y: speed },
           textureID: "../texture/sample_16x16.png",
           buffer: buffer,
@@ -188,6 +191,13 @@ export class DotTS {
 
       sprite.position = VectorUtil.round(sprite.position);
 
+      this.#ctx.uniform4f(
+        this.#uColor,
+        sprite.color.r / ColorUtil.max,
+        sprite.color.g / ColorUtil.max,
+        sprite.color.b / ColorUtil.max,
+        sprite.color.a / ColorUtil.max
+      );
       this.#ctx.uniform2f(this.#uOffset, sprite.position.x, sprite.position.y);
       this.#ctx.uniform1f(this.#uScale, this.#config.canvas.scale);
       this.#ctx.drawArrays(this.#ctx.TRIANGLE_STRIP, 0, 4);

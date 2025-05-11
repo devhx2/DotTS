@@ -156,6 +156,7 @@ export const ColorUtil: ColorFunctions = {
 export type Sprite = {
   position: Vector;
   speed: Vector;
+  color: Color;
   textureID: string;
   buffer: WebGLBuffer;
 };
