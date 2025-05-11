@@ -3,7 +3,7 @@ export type Sprite = {
   y: number;
   speedX: number;
   speedY: number;
-  texture: WebGLTexture;
+  textureID: string;
   buffer: WebGLBuffer;
 };
 

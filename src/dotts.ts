@@ -1,9 +1,11 @@
+import { TexturePool } from "./resources/texture";
 import { Config, Sprite } from "./types";
 
 export class DotTS {
   #sprites: Sprite[] = [];
   #config: Config;
   #ctx: WebGLRenderingContext;
+  #textures: TexturePool;
   #uScale!: WebGLUniformLocation;
   #aPosition!: number;
   #aTexCoord!: number;
@@ -19,6 +21,8 @@ export class DotTS {
     this.#ctx = canvas.getContext("webgl") as WebGLRenderingContext;
     if (!this.#ctx) alert("Not Supported WebGL!");
 
+    this.#textures = new TexturePool();
+
     canvas.width = config.canvas.width;
     canvas.height = config.canvas.height;
 
@@ -29,6 +33,7 @@ export class DotTS {
     Promise.all([
       this.#loadShaderSource("../shader/sprite.vert"),
       this.#loadShaderSource("../shader/sprite.frag"),
+      this.#textures.load(this.#ctx, "../texture/sample_16x16.png"),
     ]).then(([vsSource, fsSource]) => {
       const vertexShader = this.#createShader(
         this.#ctx,
@@ -101,7 +106,7 @@ export class DotTS {
           y: 0,
           speedX: speed,
           speedY: speed,
-          texture: this.#loadTexture(this.#ctx, `../texture/sample_16x16.png`)!,
+          textureID: "../texture/sample_16x16.png",
           buffer: buffer,
         };
 
@@ -135,28 +140,6 @@ export class DotTS {
     return shader;
   }
 
-  #loadTexture(ctx: WebGLRenderingContext, src: string): WebGLTexture | null {
-    const texture = ctx.createTexture();
-    const image = new Image();
-    image.src = src;
-    image.onload = () => {
-      ctx.bindTexture(ctx.TEXTURE_2D, texture);
-      ctx.texImage2D(
-        ctx.TEXTURE_2D,
-        0,
-        ctx.RGBA,
-        ctx.RGBA,
-        ctx.UNSIGNED_BYTE,
-        image
-      );
-      ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_WRAP_S, ctx.CLAMP_TO_EDGE);
-      ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_WRAP_T, ctx.CLAMP_TO_EDGE);
-      ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MIN_FILTER, ctx.NEAREST);
-      ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MAG_FILTER, ctx.NEAREST);
-    };
-    return texture;
-  }
-
   #update() {
     for (const sprite of this.#sprites) {
       sprite.x += sprite.speedX;
@@ -177,7 +160,10 @@ export class DotTS {
     this.#ctx.clear(this.#ctx.COLOR_BUFFER_BIT);
 
     for (const sprite of this.#sprites) {
-      this.#ctx.bindTexture(this.#ctx.TEXTURE_2D, sprite.texture);
+      this.#ctx.bindTexture(
+        this.#ctx.TEXTURE_2D,
+        this.#textures.get(sprite.textureID)!
+      );
       this.#ctx.bindBuffer(this.#ctx.ARRAY_BUFFER, sprite.buffer);
 
       this.#ctx.enableVertexAttribArray(this.#aPosition);
