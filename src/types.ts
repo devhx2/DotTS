@@ -18,6 +18,10 @@ type CloneOperation<T> = {
   clone(a: T): T;
 };
 
+type ClampOperation<T> = {
+  clamp(a: T): T;
+};
+
 type IntegerOperations<T> = {
   round(a: T): T;
   floor(a: T): T;
@@ -78,6 +82,71 @@ export const VectorUtil: VectorFunctions = {
     const length = VectorUtil.length(v);
     return length === 0 ? { x: 0, y: 0 } : { x: v.x / length, y: v.y / length };
   },
+};
+
+// ------------------------------------------------------------
+// Color
+// ------------------------------------------------------------
+
+export type Color = {
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+};
+
+type ColorLimits = {
+  readonly min: number;
+  readonly max: number;
+};
+
+const clamp = (n: number, min: number, max: number): number => {
+  return Math.min(Math.max(n, min), max);
+};
+
+type ColorFunctions = MathOperations<Color> &
+  CompareOperations<Color> &
+  CloneOperation<Color> &
+  ClampOperation<Color> &
+  ColorLimits;
+
+export const ColorUtil: ColorFunctions = {
+  min: 0,
+  max: 255,
+  add: (a, b) => ({
+    r: a.r + b.r,
+    g: a.g + b.g,
+    b: a.b + b.b,
+    a: a.a + b.a,
+  }),
+  sub: (a, b) => ({
+    r: a.r - b.r,
+    g: a.g - b.g,
+    b: a.b - b.b,
+    a: a.a - b.a,
+  }),
+  mul: (a, n) => ({
+    r: a.r * n,
+    g: a.g * n,
+    b: a.b * n,
+    a: a.a * n,
+  }),
+  div: (a, n) =>
+    ({
+      r: a.r / n,
+      g: a.g / n,
+      b: a.b / n,
+      a: a.a / n,
+    } as Color),
+  eq: (a, b) => a.r === b.r && a.g === b.g && a.b === b.b && a.a === b.a,
+  neq: (a, b) => !ColorUtil.eq(a, b),
+  clone: (a) => ({ r: a.r, g: a.g, b: a.b, a: a.a }),
+  clamp: (a) => ({
+    r: clamp(a.r, ColorUtil.min, ColorUtil.max),
+    g: clamp(a.g, ColorUtil.min, ColorUtil.max),
+    b: clamp(a.b, ColorUtil.min, ColorUtil.max),
+    a: clamp(a.a, ColorUtil.min, ColorUtil.max),
+  }),
 };
 
 // ------------------------------------------------------------
