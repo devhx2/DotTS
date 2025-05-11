@@ -1,6 +1,6 @@
 import { ShaderPool } from "./resources/shader";
 import { TexturePool } from "./resources/texture";
-import { ColorUtil, Config, Sprite, VectorUtil } from "./types";
+import { Color, Config, Sprite, Vector } from "./types";
 
 export class DotTS {
   #sprites: Sprite[] = [];
@@ -99,9 +99,9 @@ export class DotTS {
         const speed = Math.round(width / (config.fps * 10));
 
         const sprite: Sprite = {
-          position: { x: 0, y: 0 },
-          color: { r: 255, g: 255, b: 255, a: 255 },
-          speed: { x: speed, y: speed },
+          position: new Vector(0, 0),
+          color: new Color(255, 255, 255, 255),
+          speed: new Vector(speed, speed),
           textureID: "../texture/sample_16x16.png",
           buffer: buffer,
         };
@@ -113,7 +113,7 @@ export class DotTS {
 
   #update() {
     for (const sprite of this.#sprites) {
-      sprite.position = VectorUtil.add(sprite.position, sprite.speed);
+      sprite.position.add(sprite.speed);
 
       if (
         sprite.position.x < 0 ||
@@ -161,10 +161,10 @@ export class DotTS {
         8
       );
 
-      sprite.position = VectorUtil.round(sprite.position);
+      sprite.position.round();
 
-      this.#ctx.uniform4fv(this.#uColor, ColorUtil.toArray(sprite.color));
-      this.#ctx.uniform2fv(this.#uOffset, VectorUtil.toArray(sprite.position));
+      this.#ctx.uniform4fv(this.#uColor, sprite.color.toFloatArray());
+      this.#ctx.uniform2fv(this.#uOffset, sprite.position.toArray());
       this.#ctx.uniform1f(this.#uScale, this.#config.canvas.scale);
       this.#ctx.drawArrays(this.#ctx.TRIANGLE_STRIP, 0, 4);
     }

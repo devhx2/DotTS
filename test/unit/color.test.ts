@@ -1,45 +1,140 @@
-import { Color, ColorUtil } from "@dotts";
+import { Color } from "@dotts";
 import { describe, expect, it } from "vitest";
 
-describe("ColorUtil", () => {
-  const red: Color = { r: 255, g: 0, b: 0, a: 255 };
-  const green: Color = { r: 0, g: 255, b: 0, a: 255 };
-  const half: Color = { r: 128, g: 128, b: 128, a: 128 };
-
-  it("adds colors", () => {
-    expect(ColorUtil.add(red, green)).toEqual({ r: 255, g: 255, b: 0, a: 510 });
+describe("Color", () => {
+  it("should create a color and access channels", () => {
+    const c = new Color(10, 20, 30, 40);
+    expect(c.r).toBe(10);
+    expect(c.g).toBe(20);
+    expect(c.b).toBe(30);
+    expect(c.a).toBe(40);
   });
 
-  it("subtracts colors", () => {
-    expect(ColorUtil.sub(red, green)).toEqual({ r: 255, g: -255, b: 0, a: 0 });
+  it("should add colors correctly (instance method)", () => {
+    const c1 = new Color(10, 20, 30, 40);
+    const c2 = new Color(5, 10, 15, 20);
+    c1.add(c2);
+    expect(c1.r).toBe(15);
+    expect(c1.g).toBe(30);
+    expect(c1.b).toBe(45);
+    expect(c1.a).toBe(60);
   });
 
-  it("multiplies color", () => {
-    expect(ColorUtil.mul(half, 2)).toEqual({ r: 256, g: 256, b: 256, a: 256 });
+  it("should add colors correctly (static method)", () => {
+    const c1 = new Color(10, 20, 30, 40);
+    const c2 = new Color(5, 10, 15, 20);
+    const c3 = Color.add(c1, c2);
+    expect(c3.r).toBe(15);
+    expect(c3.g).toBe(30);
+    expect(c3.b).toBe(45);
+    expect(c3.a).toBe(60);
+    // original unchanged
+    expect(c1).not.toBe(c3);
+    expect(c2).not.toBe(c3);
   });
 
-  it("divides color", () => {
-    expect(ColorUtil.div(half, 2)).toEqual({ r: 64, g: 64, b: 64, a: 64 });
+  it("should subtract colors correctly (instance method)", () => {
+    const c1 = new Color(10, 20, 30, 40);
+    const c2 = new Color(5, 10, 15, 20);
+    c1.sub(c2);
+    expect(c1.r).toBe(5);
+    expect(c1.g).toBe(10);
+    expect(c1.b).toBe(15);
+    expect(c1.a).toBe(20);
   });
 
-  it("checks equality", () => {
-    expect(ColorUtil.eq(red, red)).toBe(true);
-    expect(ColorUtil.eq(red, green)).toBe(false);
+  it("should subtract colors correctly (static method)", () => {
+    const c1 = new Color(10, 20, 30, 40);
+    const c2 = new Color(5, 10, 15, 20);
+    const c3 = Color.sub(c1, c2);
+    expect(c3.r).toBe(5);
+    expect(c3.g).toBe(10);
+    expect(c3.b).toBe(15);
+    expect(c3.a).toBe(20);
+    // original unchanged
+    expect(c1).not.toBe(c3);
+    expect(c2).not.toBe(c3);
   });
 
-  it("checks inequality", () => {
-    expect(ColorUtil.neq(red, green)).toBe(true);
-    expect(ColorUtil.neq(red, red)).toBe(false);
+  it("should multiply colors correctly (instance method)", () => {
+    const c = new Color(10, 20, 30, 40);
+    c.mul(2);
+    expect(c.r).toBe(20);
+    expect(c.g).toBe(40);
+    expect(c.b).toBe(60);
+    expect(c.a).toBe(80);
   });
 
-  it("clones color", () => {
-    const clone = ColorUtil.clone(half);
-    expect(clone).toEqual(half);
-    expect(clone).not.toBe(half);
+  it("should multiply colors correctly (static method)", () => {
+    const c1 = new Color(10, 20, 30, 40);
+    const c2 = Color.mul(c1, 2);
+    expect(c2.r).toBe(20);
+    expect(c2.g).toBe(40);
+    expect(c2.b).toBe(60);
+    expect(c2.a).toBe(80);
+    // original unchanged
+    expect(c1).not.toBe(c2);
   });
 
-  it("clamps color values to 0-255", () => {
-    const over: Color = { r: 300, g: -20, b: 128, a: 999 };
-    expect(ColorUtil.clamp(over)).toEqual({ r: 255, g: 0, b: 128, a: 255 });
+  it("should divide colors correctly (instance method)", () => {
+    const c = new Color(10, 20, 30, 40);
+    c.div(2);
+    expect(c.r).toBe(5);
+    expect(c.g).toBe(10);
+    expect(c.b).toBe(15);
+    expect(c.a).toBe(20);
+  });
+
+  it("should divide colors correctly (static method)", () => {
+    const c1 = new Color(10, 20, 30, 40);
+    const c2 = Color.div(c1, 2);
+    expect(c2.r).toBe(5);
+    expect(c2.g).toBe(10);
+    expect(c2.b).toBe(15);
+    expect(c2.a).toBe(20);
+    // original unchanged
+    expect(c1).not.toBe(c2);
+  });
+
+  it("should check equality correctly", () => {
+    const c1 = new Color(1, 2, 3, 4);
+    const c2 = new Color(1, 2, 3, 4);
+    const c3 = new Color(5, 6, 7, 8);
+    expect(c1.eq(c2)).toBe(true);
+    expect(c1.neq(c3)).toBe(true);
+  });
+
+  it("should clone correctly", () => {
+    const c1 = new Color(10, 20, 30, 40);
+    const c2 = c1.clone();
+    expect(c2.eq(c1)).toBe(true);
+    // original unchanged
+    expect(c1).not.toBe(c2);
+  });
+
+  it("should convert to array", () => {
+    const c = new Color(10, 20, 30, 40);
+    const arr = c.toArray();
+    expect(arr).toEqual(new Uint8ClampedArray([10, 20, 30, 40]));
+  });
+
+  it("should parse hex colors correctly", () => {
+    const c = new Color(0, 0, 0, 0).fromHex("#ffcc88");
+    expect(c.r).toBe(255);
+    expect(c.g).toBe(204);
+    expect(c.b).toBe(136);
+    expect(c.a).toBe(255);
+
+    const short = new Color(0, 0, 0, 0).fromHex("#fc8");
+    expect(short.r).toBe(255);
+    expect(short.g).toBe(204);
+    expect(short.b).toBe(136);
+    expect(short.a).toBe(255);
+
+    const withAlpha = new Color(0, 0, 0, 0).fromHex("#11223344");
+    expect(withAlpha.r).toBe(17);
+    expect(withAlpha.g).toBe(34);
+    expect(withAlpha.b).toBe(51);
+    expect(withAlpha.a).toBe(68);
   });
 });
