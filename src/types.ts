@@ -28,6 +28,10 @@ type IntegerOperations<T> = {
   ceil(a: T): T;
 };
 
+type ArrayConvert<T> = {
+  toArray(a: T): Float32Array;
+};
+
 // ------------------------------------------------------------
 // Vector
 // ------------------------------------------------------------
@@ -52,14 +56,13 @@ type VectorOperations = {
   normalize: (v: Vector) => Vector;
 };
 
-type VectorFunctions = MathOperations<Vector> &
+export const VectorUtil: MathOperations<Vector> &
   IntegerOperations<Vector> &
   CompareOperations<Vector> &
   CloneOperation<Vector> &
+  ArrayConvert<Vector> &
   VectorDirections &
-  VectorOperations;
-
-export const VectorUtil: VectorFunctions = {
+  VectorOperations = {
   zero: { x: 0, y: 0 },
   up: { x: 0, y: 1 },
   down: { x: 0, y: -1 },
@@ -72,6 +75,7 @@ export const VectorUtil: VectorFunctions = {
   eq: (a, b) => a.x === b.x && a.y === b.y,
   neq: (a, b) => !VectorUtil.eq(a, b),
   clone: (a) => ({ x: a.x, y: a.y }),
+  toArray: (a) => new Float32Array([a.x, a.y]),
   round: (a) => ({ x: Math.round(a.x), y: Math.round(a.y) }),
   floor: (a) => ({ x: Math.floor(a.x), y: Math.floor(a.y) }),
   ceil: (a) => ({ x: Math.ceil(a.x), y: Math.ceil(a.y) }),
@@ -104,13 +108,12 @@ const clamp = (n: number, min: number, max: number): number => {
   return Math.min(Math.max(n, min), max);
 };
 
-type ColorFunctions = MathOperations<Color> &
+export const ColorUtil: MathOperations<Color> &
   CompareOperations<Color> &
   CloneOperation<Color> &
   ClampOperation<Color> &
-  ColorLimits;
-
-export const ColorUtil: ColorFunctions = {
+  ArrayConvert<Color> &
+  ColorLimits = {
   min: 0,
   max: 255,
   add: (a, b) => ({
@@ -147,6 +150,13 @@ export const ColorUtil: ColorFunctions = {
     b: clamp(a.b, ColorUtil.min, ColorUtil.max),
     a: clamp(a.a, ColorUtil.min, ColorUtil.max),
   }),
+  toArray: (a) =>
+    new Float32Array([
+      clamp(a.r, ColorUtil.min, ColorUtil.max) / ColorUtil.max,
+      clamp(a.g, ColorUtil.min, ColorUtil.max) / ColorUtil.max,
+      clamp(a.b, ColorUtil.min, ColorUtil.max) / ColorUtil.max,
+      clamp(a.a, ColorUtil.min, ColorUtil.max) / ColorUtil.max,
+    ]),
 };
 
 // ------------------------------------------------------------

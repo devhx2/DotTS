@@ -105,7 +105,7 @@ export class DotTS {
 
         const sprite: Sprite = {
           position: { x: 0, y: 0 },
-          color: { r: 255, g: 255, b: 255, a: 200 },
+          color: { r: 255, g: 255, b: 255, a: 255 },
           speed: { x: speed, y: speed },
           textureID: "../texture/sample_16x16.png",
           buffer: buffer,
@@ -191,14 +191,8 @@ export class DotTS {
 
       sprite.position = VectorUtil.round(sprite.position);
 
-      this.#ctx.uniform4f(
-        this.#uColor,
-        sprite.color.r / ColorUtil.max,
-        sprite.color.g / ColorUtil.max,
-        sprite.color.b / ColorUtil.max,
-        sprite.color.a / ColorUtil.max
-      );
-      this.#ctx.uniform2f(this.#uOffset, sprite.position.x, sprite.position.y);
+      this.#ctx.uniform4fv(this.#uColor, ColorUtil.toArray(sprite.color));
+      this.#ctx.uniform2fv(this.#uOffset, VectorUtil.toArray(sprite.position));
       this.#ctx.uniform1f(this.#uScale, this.#config.canvas.scale);
       this.#ctx.drawArrays(this.#ctx.TRIANGLE_STRIP, 0, 4);
     }
