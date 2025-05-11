@@ -1,11 +1,15 @@
+import { ShaderPool } from "./resources/shader";
 import { TexturePool } from "./resources/texture";
 import { ColorUtil, Config, Sprite, VectorUtil } from "./types";
 
 export class DotTS {
   #sprites: Sprite[] = [];
   #config: Config;
+
   #ctx: WebGLRenderingContext;
   #textures: TexturePool;
+  #shaders: ShaderPool;
+
   #aPosition!: number;
   #aTexCoord!: number;
   #uScale!: WebGLUniformLocation;
@@ -23,6 +27,7 @@ export class DotTS {
     if (!this.#ctx) alert("Not Supported WebGL!");
 
     this.#textures = new TexturePool();
+    this.#shaders = new ShaderPool();
 
     canvas.width = config.canvas.width;
     canvas.height = config.canvas.height;
@@ -32,29 +37,19 @@ export class DotTS {
     this.#ctx.blendFunc(this.#ctx.SRC_ALPHA, this.#ctx.ONE_MINUS_SRC_ALPHA);
 
     Promise.all([
-      this.#loadShaderSource("../shader/sprite.vert"),
-      this.#loadShaderSource("../shader/sprite.frag"),
+      this.#shaders.load(this.#ctx, "../shader/sprite.vert"),
+      this.#shaders.load(this.#ctx, "../shader/sprite.frag"),
       this.#textures.load(this.#ctx, "../texture/sample_16x16.png"),
-    ]).then(([vsSource, fsSource]) => {
-      const vertexShader = this.#createShader(
-        this.#ctx,
-        this.#ctx.VERTEX_SHADER,
-        vsSource
-      );
-      const fragmentShader = this.#createShader(
-        this.#ctx,
-        this.#ctx.FRAGMENT_SHADER,
-        fsSource
-      );
-
-      if (!vertexShader || !fragmentShader) {
-        console.error("failed to create shader");
-        return;
-      }
-
+    ]).then(() => {
       const program = this.#ctx.createProgram();
-      this.#ctx.attachShader(program, vertexShader);
-      this.#ctx.attachShader(program, fragmentShader);
+      this.#ctx.attachShader(
+        program,
+        this.#shaders.get("../shader/sprite.vert")!
+      );
+      this.#ctx.attachShader(
+        program,
+        this.#shaders.get("../shader/sprite.frag")!
+      );
       this.#ctx.linkProgram(program);
       this.#ctx.useProgram(program);
 
@@ -114,31 +109,6 @@ export class DotTS {
         this.#sprites.push(sprite);
       }
     });
-  }
-
-  async #loadShaderSource(url: string): Promise<string> {
-    const res = await fetch(url);
-    return await res.text();
-  }
-
-  #createShader(
-    ctx: WebGLRenderingContext,
-    type: number,
-    source: string
-  ): WebGLShader | null {
-    const shader = ctx.createShader(type);
-    if (!shader) {
-      console.error("failed to crete shader");
-      return null;
-    }
-    ctx.shaderSource(shader, source);
-    ctx.compileShader(shader);
-    if (!ctx.getShaderParameter(shader, ctx.COMPILE_STATUS)) {
-      console.error(ctx.getShaderInfoLog(shader));
-      ctx.deleteShader(shader);
-      return null;
-    }
-    return shader;
   }
 
   #update() {
