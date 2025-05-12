@@ -26,8 +26,8 @@ export class DotTS {
     this.#ctx = canvas.getContext("webgl") as WebGLRenderingContext;
     if (!this.#ctx) alert("Not Supported WebGL!");
 
-    this.#textures = new TexturePool();
-    this.#shaders = new ShaderPool();
+    this.#textures = new TexturePool(this.#ctx);
+    this.#shaders = new ShaderPool(this.#ctx);
 
     canvas.width = config.canvas.width;
     canvas.height = config.canvas.height;
@@ -37,9 +37,8 @@ export class DotTS {
     this.#ctx.blendFunc(this.#ctx.SRC_ALPHA, this.#ctx.ONE_MINUS_SRC_ALPHA);
 
     Promise.all([
-      this.#shaders.load(this.#ctx, "../shader/sprite.vert"),
-      this.#shaders.load(this.#ctx, "../shader/sprite.frag"),
-      this.#textures.load(this.#ctx, "../texture/sample_16x16.png"),
+      this.#shaders.load(["../shader/sprite.vert", "../shader/sprite.frag"]),
+      this.#textures.load("../texture/sample_16x16.png"),
     ]).then(() => {
       const program = this.#ctx.createProgram();
       this.#ctx.attachShader(

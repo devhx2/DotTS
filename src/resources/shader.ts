@@ -1,7 +1,22 @@
 export class ShaderPool {
-  #shaders: Map<string, WebGLShader> = new Map();
+  readonly #ctx: WebGLRenderingContext;
+  readonly #shaders: Map<string, WebGLShader>;
 
-  async load(ctx: WebGLRenderingContext, src: string): Promise<void> {
+  constructor(ctx: WebGLRenderingContext) {
+    this.#ctx = ctx;
+    this.#shaders = new Map();
+  }
+
+  async load(src: string): Promise<void>;
+  async load(src: string[]): Promise<void>;
+  async load(src: string | string[]): Promise<void> {
+    const ctx = this.#ctx;
+
+    if (Array.isArray(src)) {
+      await Promise.all(src.map((s) => this.load(s)));
+      return;
+    }
+
     return new Promise(async (resolve, reject) => {
       const type = src.endsWith(".vert")
         ? ctx.VERTEX_SHADER

@@ -1,7 +1,22 @@
 export class TexturePool {
-  #textures: Map<string, WebGLTexture> = new Map();
+  readonly #ctx: WebGLRenderingContext;
+  readonly #textures: Map<string, WebGLTexture>;
 
-  async load(ctx: WebGLRenderingContext, src: string): Promise<void> {
+  constructor(ctx: WebGLRenderingContext) {
+    this.#ctx = ctx;
+    this.#textures = new Map();
+  }
+
+  async load(src: string): Promise<void>;
+  async load(src: string[]): Promise<void>;
+  async load(src: string | string[]): Promise<void> {
+    const ctx = this.#ctx;
+
+    if (Array.isArray(src)) {
+      await Promise.all(src.map((s) => this.load(s)));
+      return;
+    }
+
     return new Promise((resolve, reject) => {
       const texture = ctx.createTexture();
       const image = new Image();
