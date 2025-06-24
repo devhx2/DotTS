@@ -58,6 +58,10 @@ export class Vector
   set y(n: number) {
     this.#array[1] = n;
   }
+  set xy(n: number) {
+    this.x = n;
+    this.y = n;
+  }
   get length(): number {
     return Math.hypot(this.x, this.y);
   }
@@ -194,6 +198,17 @@ export class Color
   }
   set a(n: number) {
     this.#array[3] = n;
+  }
+  set rgb(n: number) {
+    this.r = n;
+    this.g = n;
+    this.b = n;
+  }
+  set rgba(n: number) {
+    this.r = n;
+    this.g = n;
+    this.b = n;
+    this.a = n;
   }
   add(other: Color): this {
     this.r += other.r;
